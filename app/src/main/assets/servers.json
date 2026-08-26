@@ -1,0 +1,80 @@
+[
+  {
+    "id": "hypixel",
+    "name": "Hypixel Network",
+    "host": "mc.hypixel.net",
+    "port": 25565,
+    "version": "1.8.9 - 1.21.x",
+    "motd": "§6Hypixel Network §c[1.8-1.21]§r\n§eBedwars §7| §bSkyblock §7| §aDuels §7| §cWool Wars",
+    "onlinePlayers": 48210,
+    "maxPlayers": 100000,
+    "pingMs": 42,
+    "featured": true,
+    "category": "Minigames"
+  },
+  {
+    "id": "complex-gaming",
+    "name": "Complex Gaming",
+    "host": "hub.mc-complex.com",
+    "port": 25565,
+    "version": "1.12.2 - 1.21.x",
+    "motd": "§9§lCOMPLEX GAMING §7- §ePixelmon §7| §aSurvival §7| §dSkyblock\n§fCustom Pokemon & Dungeons Online!",
+    "onlinePlayers": 3450,
+    "maxPlayers": 5000,
+    "pingMs": 68,
+    "featured": true,
+    "category": "Pixelmon / Survival"
+  },
+  {
+    "id": "two-b-two-t",
+    "name": "2b2t Anarchy",
+    "host": "2b2t.org",
+    "port": 25565,
+    "version": "1.20.4",
+    "motd": "§42b2t §7The oldest anarchy server in Minecraft.\n§cNo rules, pure chaos.",
+    "onlinePlayers": 284,
+    "maxPlayers": 1000,
+    "pingMs": 85,
+    "featured": false,
+    "category": "Anarchy"
+  },
+  {
+    "id": "donut-smp",
+    "name": "Donut SMP",
+    "host": "donutsmp.net",
+    "port": 25565,
+    "version": "1.20.x - 1.21.x",
+    "motd": "§6§lDONUT SMP §7- §cHardcore Steal-Heart Survival\n§eKill players to steal hearts! Economy & Clans",
+    "onlinePlayers": 4120,
+    "maxPlayers": 10000,
+    "pingMs": 55,
+    "featured": true,
+    "category": "Hardcore SMP"
+  },
+  {
+    "id": "minehut",
+    "name": "Minehut Free Servers",
+    "host": "mc.minehut.com",
+    "port": 25565,
+    "version": "1.21.1",
+    "motd": "§b§lMINEHUT §7- Host and join over 20,000 player-created servers!\n§fFree server hosting network",
+    "onlinePlayers": 8900,
+    "maxPlayers": 20000,
+    "pingMs": 49,
+    "featured": false,
+    "category": "Community"
+  },
+  {
+    "id": "cubecraft",
+    "name": "CubeCraft Games",
+    "host": "play.cubecraft.net",
+    "port": 25565,
+    "version": "1.8.9 - 1.21.x",
+    "motd": "§bCubeCraft §eNetwork §7- §6EggWars §7| §cSkyWars §7| §aLucky Islands\n§fOfficial Crossplay Network",
+    "onlinePlayers": 7600,
+    "maxPlayers": 15000,
+    "pingMs": 52,
+    "featured": false,
+    "category": "Minigames"
+  }
+]

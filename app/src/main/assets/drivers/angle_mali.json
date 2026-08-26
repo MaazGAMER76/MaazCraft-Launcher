@@ -1,0 +1,17 @@
+{
+  "id": "angle-mali",
+  "name": "ANGLE OpenGL ES on Vulkan Driver",
+  "targetGpu": "Mali",
+  "driverType": "ANGLE_VULKAN",
+  "version": "2.1.21-angle",
+  "recommended": true,
+  "description": "High performance ANGLE hardware translation layer for ARM Mali (Bifrost/Valhall) GPUs.",
+  "features": [
+    "ANGLE translation engine",
+    "Mali threaded command buffers",
+    "OpenGLES 3.2 to Vulkan translation",
+    "Direct pipeline caching"
+  ],
+  "recommendedFlags": "-Dorg.lwjgl.opengl.libname=libGLESv2.so -Dangle.fast=1",
+  "libPath": "drivers/mali/libEGL_angle.so"
+}

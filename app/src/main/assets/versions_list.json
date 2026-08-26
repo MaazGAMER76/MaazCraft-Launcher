@@ -1,0 +1,78 @@
+{
+  "latest": {
+    "release": "1.21.1",
+    "snapshot": "24w34a"
+  },
+  "versions": [
+    {
+      "id": "1.21.1",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.21.1/version.json",
+      "time": "2024-08-08T13:00:00+00:00",
+      "releaseTime": "2024-08-08T13:00:00+00:00",
+      "javaVersion": 21,
+      "recommendedJava": "Java 21 ARM64",
+      "description": "Tricky Trials Update (Bundles, Crafter, Breeze, Mace)"
+    },
+    {
+      "id": "1.20.4",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.20.4/version.json",
+      "time": "2023-12-07T12:00:00+00:00",
+      "releaseTime": "2023-12-07T12:00:00+00:00",
+      "javaVersion": 17,
+      "recommendedJava": "Java 17 ARM64",
+      "description": "Trails & Tales Minor Bugfix & Decorated Pot storage"
+    },
+    {
+      "id": "1.20.1",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.20.1/version.json",
+      "time": "2023-06-12T12:00:00+00:00",
+      "releaseTime": "2023-06-12T12:00:00+00:00",
+      "javaVersion": 17,
+      "recommendedJava": "Java 17 ARM64",
+      "description": "Trails & Tales (Camel, Sniffer, Cherry Blossom, Armor Trims)"
+    },
+    {
+      "id": "1.19.4",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.19.4/version.json",
+      "time": "2023-03-14T12:00:00+00:00",
+      "releaseTime": "2023-03-14T12:00:00+00:00",
+      "javaVersion": 17,
+      "recommendedJava": "Java 17 ARM64",
+      "description": "The Wild Update Polish (Display entities, bundle fixes)"
+    },
+    {
+      "id": "1.16.5",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.16.5/version.json",
+      "time": "2021-01-15T12:00:00+00:00",
+      "releaseTime": "2021-01-15T12:00:00+00:00",
+      "javaVersion": 8,
+      "recommendedJava": "Java 8 ARM64",
+      "description": "Nether Update (Netherite, Piglins, Crimson & Warped Forests)"
+    },
+    {
+      "id": "1.12.2",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.12.2/version.json",
+      "time": "2017-09-18T12:00:00+00:00",
+      "releaseTime": "2017-09-18T12:00:00+00:00",
+      "javaVersion": 8,
+      "recommendedJava": "Java 8 ARM64",
+      "description": "World of Color Update - The Golden Era of Modded Minecraft"
+    },
+    {
+      "id": "1.8.9",
+      "type": "release",
+      "url": "https://piston-meta.mojang.com/v1/packages/1.8.9/version.json",
+      "time": "2015-12-09T12:00:00+00:00",
+      "releaseTime": "2015-12-09T12:00:00+00:00",
+      "javaVersion": 8,
+      "recommendedJava": "Java 8 ARM64",
+      "description": "Bountiful Update - Best Competitive PvP Version"
+    }
+  ]
+}

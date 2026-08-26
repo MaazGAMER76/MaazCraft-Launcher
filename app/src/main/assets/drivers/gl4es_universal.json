@@ -1,0 +1,16 @@
+{
+  "id": "gl4es-universal",
+  "name": "GL4ES Universal Compatibility Driver",
+  "targetGpu": "Universal",
+  "driverType": "GL4ES",
+  "version": "1.1.4-universal",
+  "recommended": false,
+  "description": "Standard OpenGL 2.1 wrapper for PowerVR, older Mali, and generic mobile GPUs.",
+  "features": [
+    "OpenGLES 2.0/3.0 to OpenGL wrapper",
+    "Universal hardware support",
+    "Safe fallback execution"
+  ],
+  "recommendedFlags": "-Dgl4es.notexrect=1 -Dgl4es.fbo=1",
+  "libPath": "drivers/universal/libgl4es.so"
+}

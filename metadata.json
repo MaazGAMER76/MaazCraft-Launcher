@@ -1,0 +1,6 @@
+{
+  "name": "MaazCraft Launcher V3",
+  "description": "MaazCraft Launcher V3 - High performance Minecraft Java Edition launcher with Snapdragon & Adreno auto-optimizer, Java runtime manager, modpacks, server manager, and touch controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

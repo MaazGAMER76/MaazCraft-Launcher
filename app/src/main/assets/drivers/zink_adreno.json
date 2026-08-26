@@ -1,0 +1,17 @@
+{
+  "id": "turnip-zink-adreno",
+  "name": "Mesa Turnip + Zink Vulkan Driver",
+  "targetGpu": "Adreno",
+  "driverType": "VULKAN_ZINK",
+  "version": "24.1.0-turnip-zink",
+  "recommended": true,
+  "description": "Hardware-accelerated OpenGL 4.6 on Vulkan specifically optimized for Qualcomm Adreno GPUs.",
+  "features": [
+    "Vulkan 1.3 direct backend",
+    "Turnip Adreno KGSL driver",
+    "Zink OpenGL 4.6 translation",
+    "Shader pre-caching & low power state"
+  ],
+  "recommendedFlags": "-Dorg.lwjgl.opengl.libname=libGL.so -Dzink.disable_linear=true -Dturnip.speed=1",
+  "libPath": "drivers/adreno/libzink.so"
+}
