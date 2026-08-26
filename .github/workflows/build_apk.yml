@@ -1,15 +1,16 @@
-name: Build and Publish APK
+name: Build APK (artifact)
 
 on:
   push:
     branches: ["**"]
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
-    name: Build APK
+    name: Build APK and upload artifact
     runs-on: ubuntu-latest
     env:
       ANDROID_SDK_ROOT: /usr/local/android-sdk
@@ -48,17 +49,14 @@ jobs:
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
           unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools
-          # move into expected layout: $ANDROID_SDK_ROOT/cmdline-tools/latest
           sudo mv /tmp/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
           sudo chown -R $USER:$USER $ANDROID_SDK_ROOT
           export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Verify sdkmanager and sdk
-        run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list | head -n 30
+      - name: Verify sdkmanager
+        run: $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list | head -n 30
 
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
@@ -66,24 +64,8 @@ jobs:
       - name: List built APK
         run: ls -l app/build/outputs/apk/debug || true
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: apk-build-${{ github.run_id }}
-          release_name: MaazCraft Launcher Build ${{ github.run_number }}
-          body: Auto-built APK for commit ${{ github.sha }} on ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
-      - name: Upload APK to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/debug/app-debug.apk
-          asset_name: MaazCraft-Launcher-V3.apk
-          asset_content_type: application/vnd.android.package-archive
+          name: MaazCraft-Launcher-V3.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
