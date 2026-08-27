@@ -32,7 +32,13 @@ jobs:
           if [ -f gradlew ]; then chmod +x gradlew; fi
 
       - name: Build Android APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug --no-daemon --stacktrace || gradle assembleDebug --no-daemon --stacktrace
+          else
+            gradle assembleDebug --no-daemon --stacktrace
+          fi
 
       - name: Rename APK for Release
         run: |
