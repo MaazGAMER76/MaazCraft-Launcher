@@ -127,7 +127,7 @@ fun MainAppScreen() {
                     onCompleted = { profile ->
                         showOptimizationWizard = false
                         scope.launch {
-                            snackbarHostState.showSnackbar("Snapdragon 680 Profile applied! 2GB RAM • 8 Chunks • Fast Graphics")
+                            snackbarHostState.showSnackbar("${profile.socName} Profile applied! ${profile.recommendedRamMb}MB RAM • ${profile.recommendedRenderDistance} Chunks • ${profile.recommendedGraphics} Graphics")
                         }
                     }
                 )
@@ -243,7 +243,7 @@ fun MainAppScreen() {
                     onCompleted = { profile ->
                         showOptimizationWizard = false
                         scope.launch {
-                            snackbarHostState.showSnackbar("Snapdragon 680 Profile applied! 2GB RAM • 8 Chunks • Fast Graphics")
+                            snackbarHostState.showSnackbar("${profile.socName} Profile applied! ${profile.recommendedRamMb}MB RAM • ${profile.recommendedRenderDistance} Chunks • ${profile.recommendedGraphics} Graphics")
                         }
                     }
                 )
