@@ -144,7 +144,40 @@ data class Account(
     val uuid: String,
     val isMicrosoft: Boolean,
     val skinType: String = "Steve",
-    val accessToken: String = "offline_token"
+    val accessToken: String = "offline_token",
+    val skinPath: String = "",
+    val capeUrl: String = "",
+    val lastPlayed: Long = System.currentTimeMillis()
+)
+
+/**
+ * Smart Minecraft Skin model with 3D and multiplayer visibility metadata.
+ */
+data class SkinItem(
+    val id: String,
+    val name: String,
+    val modelType: String = "classic", // "classic" (Steve 4px) or "slim" (Alex 3px)
+    val localFilePath: String = "",
+    val previewUrl: String = "",
+    val isApplied: Boolean = false,
+    val source: String = "Local", // "Local", "Online", "Default"
+    val author: String = "Community",
+    val resolution: String = "64x64",
+    val multiplayerVisible: Boolean = true
+)
+
+/**
+ * Crash diagnosis & auto-fix recipe model.
+ */
+data class CrashDiagnostic(
+    val errorType: String,
+    val severity: String, // "CRITICAL", "WARNING", "INFO"
+    val summary: String,
+    val rootCause: String,
+    val suggestedFix: String,
+    val autoFixAction: String, // "INCREASE_RAM", "SWITCH_JAVA", "CHANGE_DRIVER", "REMOVE_FAULTY_MOD", "CLEAN_CONFIG"
+    val logSnippet: String = "",
+    val isFixed: Boolean = false
 )
 
 /**

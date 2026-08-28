@@ -67,18 +67,9 @@ import com.example.ui.theme.SurfaceDark
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
-import com.example.ui.screens.ZalithLandscapeScreen
+import com.example.ui.screens.MainLandscapeScreen
 import com.example.ui.wizard.OptimizationWizardDialog
 import kotlinx.coroutines.launch
-
-enum class NavigationTab(val title: String, val icon: ImageVector) {
-    HOME("Home", Icons.Default.SportsEsports),
-    VERSIONS("Versions", Icons.Default.List),
-    MODPACKS("Modpacks", Icons.Default.Widgets),
-    SERVERS("Servers", Icons.Default.Dns),
-    GITHUB("GitHub Hub", Icons.Default.CloudDownload),
-    SETTINGS("Settings", Icons.Default.Settings)
-}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,158 +88,34 @@ fun MainAppScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val prefs = remember { PreferenceManager(context) }
-    val launchHelper = remember { LaunchHelper(context) }
-    val versionManager = remember { VersionManager(context) }
-    val modpackManager = remember { ModpackManager(context) }
-    val serverManager = remember { ServerManager(context) }
-    val gitHubService = remember { GitHubManagerService(context) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedTab by remember { mutableStateOf(NavigationTab.HOME) }
     var showOptimizationWizard by remember { mutableStateOf(!prefs.isFirstLaunchDone) }
-    var useZalithLandscapeLayout by remember { mutableStateOf(true) }
 
-    if (useZalithLandscapeLayout) {
-        Box(modifier = Modifier.fillMaxSize().background(BackgroundDark)) {
-            ZalithLandscapeScreen(
-                launchHelper = launchHelper,
-                versionManager = versionManager,
-                modpackManager = modpackManager,
-                serverManager = serverManager,
-                gitHubService = gitHubService,
-                snackbarHostState = snackbarHostState,
-                onOpenWizard = { showOptimizationWizard = true }
+    Box(modifier = Modifier.fillMaxSize().background(BackgroundDark)) {
+        // Main 3-Column Landscape Interface
+        MainLandscapeScreen(
+            snackbarHostState = snackbarHostState,
+            onOpenWizard = { showOptimizationWizard = true }
+        )
+
+        // Snackbar Host for real-time notifications
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        // Auto-Optimization Wizard Dialog
+        if (showOptimizationWizard) {
+            OptimizationWizardDialog(
+                onDismiss = { showOptimizationWizard = false },
+                onCompleted = { profile ->
+                    showOptimizationWizard = false
+                    scope.launch {
+                        snackbarHostState.showSnackbar("${profile.socName} Profile applied! ${profile.recommendedRamMb}MB RAM • ${profile.recommendedRenderDistance} Chunks • ${profile.recommendedGraphics} Graphics")
+                    }
+                }
             )
-
-            // AUTO-OPTIMIZATION WIZARD DIALOG
-            if (showOptimizationWizard) {
-                OptimizationWizardDialog(
-                    onDismiss = { showOptimizationWizard = false },
-                    onCompleted = { profile ->
-                        showOptimizationWizard = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar("${profile.socName} Profile applied! ${profile.recommendedRamMb}MB RAM • ${profile.recommendedRenderDistance} Chunks • ${profile.recommendedGraphics} Graphics")
-                        }
-                    }
-                )
-            }
-        }
-    } else {
-        Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = BackgroundDark,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            NavigationBar(
-                containerColor = SurfaceDark,
-                contentColor = TextPrimary,
-                tonalElevation = 8.dp,
-                modifier = Modifier.height(72.dp)
-            ) {
-                NavigationTab.entries.forEach { tab ->
-                    val isSelected = selectedTab == tab
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = { selectedTab = tab },
-                        icon = {
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.title,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = tab.title,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = PurpleAccent,
-                            selectedTextColor = PurpleAccent,
-                            unselectedIconColor = TextMuted,
-                            unselectedTextColor = TextMuted,
-                            indicatorColor = PurpleContainer
-                        )
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(BackgroundDark)
-        ) {
-            when (selectedTab) {
-                NavigationTab.HOME -> {
-                    HomeScreen(
-                        launchHelper = launchHelper,
-                        onNavigateToVersions = { selectedTab = NavigationTab.VERSIONS },
-                        onNavigateToSettings = { selectedTab = NavigationTab.SETTINGS },
-                        onReOptimize = { showOptimizationWizard = true }
-                    )
-                }
-                NavigationTab.VERSIONS -> {
-                    VersionsScreen(
-                        versionManager = versionManager,
-                        onVersionSelected = { verId ->
-                            selectedTab = NavigationTab.HOME
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Target version set to Minecraft $verId")
-                            }
-                        }
-                    )
-                }
-                NavigationTab.MODPACKS -> {
-                    ModpacksScreen(
-                        modpackManager = modpackManager,
-                        onModpackSelected = { pack ->
-                            selectedTab = NavigationTab.HOME
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Loaded ${pack.name} (${pack.loader})")
-                            }
-                        }
-                    )
-                }
-                NavigationTab.SERVERS -> {
-                    ServersScreen(
-                        serverManager = serverManager,
-                        onConnectServer = { s ->
-                            selectedTab = NavigationTab.HOME
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Ready to connect to ${s.name} (${s.host})")
-                            }
-                        }
-                    )
-                }
-                NavigationTab.GITHUB -> {
-                    GitHubScreen(
-                        gitHubService = gitHubService
-                    )
-                }
-                NavigationTab.SETTINGS -> {
-                    SettingsScreen(
-                        onReOptimize = { showOptimizationWizard = true }
-                    )
-                }
-            }
-
-            // AUTO-OPTIMIZATION WIZARD DIALOG
-            if (showOptimizationWizard) {
-                OptimizationWizardDialog(
-                    onDismiss = { showOptimizationWizard = false },
-                    onCompleted = { profile ->
-                        showOptimizationWizard = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar("${profile.socName} Profile applied! ${profile.recommendedRamMb}MB RAM • ${profile.recommendedRenderDistance} Chunks • ${profile.recommendedGraphics} Graphics")
-                        }
-                    }
-                )
-            }
         }
     }
-}
 }
