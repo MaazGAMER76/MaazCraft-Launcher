@@ -140,10 +140,11 @@ class DeviceProfileManager(private val context: Context) {
                     socModel.contains("SM6225", ignoreCase = true) ||
                     socModel.contains("680", ignoreCase = true)
 
-            // 2. Check for Unisoc / MediaTek / Mali devices (e.g. itel S26, Helio, Dimensity)
+            // 2. Check for Unisoc / MediaTek / Mali devices (e.g. itel S25, itel S685LN, T620, Helio, Dimensity)
             val isItelDevice = manufacturer.contains("itel") ||
-                    model.contains("s26") || model.contains("s66") || model.contains("p55") ||
+                    model.contains("s25") || model.contains("s685ln") || model.contains("s26") || model.contains("s66") || model.contains("p55") ||
                     socModel.contains("ums9230", ignoreCase = true) ||
+                    socModel.contains("t620", ignoreCase = true) ||
                     socModel.contains("t606", ignoreCase = true) ||
                     socModel.contains("t616", ignoreCase = true) ||
                     socModel.contains("unisoc", ignoreCase = true) ||
@@ -176,7 +177,7 @@ class DeviceProfileManager(private val context: Context) {
             val gpuRenderer = when {
                 isRedmiNote11 -> "Adreno (TM) 610 (MobileGlues Turnip Vulkan)"
                 isAdreno -> "Qualcomm Adreno (MobileGlues Turnip Vulkan)"
-                isItelDevice -> "ARM Mali-G57 MP1 (ANGLE Vulkan)"
+                isItelDevice -> "ARM Mali-G57 MP1 (ANGLE OpenGLES 3.2 on Vulkan)"
                 isMali -> "ARM Mali Valhall/Bifrost (ANGLE Vulkan)"
                 else -> "MobileGlues GL4ES Compatibility Wrapper"
             }
@@ -184,7 +185,7 @@ class DeviceProfileManager(private val context: Context) {
             // Calculation of RAM allocation based on real physical memory
             val calculatedXmx = when {
                 totalRamMb >= 8000 -> 2560 // 2.5 GB for 8GB+ phones
-                totalRamMb >= 6000 -> 2048 // 2.0 GB for 6GB phones
+                totalRamMb >= 5500 -> 2048 // 2.0 GB for 6GB phones (e.g. itel S25)
                 totalRamMb >= 4000 -> 1536 // 1.5 GB for 4GB phones
                 else -> 1024 // 1.0 GB for low memory devices
             }
@@ -198,7 +199,7 @@ class DeviceProfileManager(private val context: Context) {
 
             val recommendedRenderDist = when {
                 totalRamMb >= 8000 -> 8
-                totalRamMb >= 6000 -> 8
+                totalRamMb >= 5500 -> 8
                 totalRamMb >= 4000 -> 6
                 else -> 4
             }
@@ -206,14 +207,14 @@ class DeviceProfileManager(private val context: Context) {
             val socNameFinal = when {
                 isRedmiNote11 -> "Qualcomm Snapdragon 680 (SM6225)"
                 isAdreno -> "Qualcomm Snapdragon Octa-Core"
-                isItelDevice -> "Unisoc T606 (Dynamic RAM)"
+                isItelDevice -> "Unisoc T620 (UMS9230S) Octa-Core"
                 isMali -> "ARM Mali Octa-Core"
                 else -> if (socModel.isNotBlank() && socModel != "unknown") socModel else "${Build.MANUFACTURER} ${Build.MODEL}"
             }
 
             val cpuModelFinal = when {
                 isRedmiNote11 -> "Redmi Note 11 Kryo 265"
-                isItelDevice -> "itel S26 Cortex-A75/A55"
+                isItelDevice -> "itel S25 (S685LN) Cortex-A75/A55"
                 else -> "${Build.MANUFACTURER} ${Build.MODEL}"
             }
 
