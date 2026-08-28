@@ -57,9 +57,12 @@ jobs:
             
             # Align and sign with v2/v3 signature
             $BUILD_TOOLS_DIR/zipalign -v -p 4 "$RAW_APK" release_apks/aligned.apk || cp "$RAW_APK" release_apks/aligned.apk
-            $BUILD_TOOLS_DIR/apksigner sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey --out release_apks/MaazCraft-Launcher-V3.apk release_apks/aligned.apk || cp "$RAW_APK" release_apks/MaazCraft-Launcher-V3.apk
+            $BUILD_TOOLS_DIR/apksigner sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey --out release_apks/MaazCraft-Launcher-V3.1.apk release_apks/aligned.apk || cp "$RAW_APK" release_apks/MaazCraft-Launcher-V3.1.apk
             
-            echo "APK ready at release_apks/MaazCraft-Launcher-V3.apk"
+            # Also keep a copy as MaazCraft-Launcher.apk
+            cp release_apks/MaazCraft-Launcher-V3.1.apk release_apks/MaazCraft-Launcher-Latest.apk
+            
+            echo "APK ready at release_apks/MaazCraft-Launcher-V3.1.apk"
           else
             echo "Error: No APK generated!"
             exit 1
@@ -68,18 +71,29 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MaazCraft-Launcher-V3-APK
-          path: release_apks/MaazCraft-Launcher-V3.apk
+          name: MaazCraft-Launcher-V3.1-APK
+          path: release_apks/MaazCraft-Launcher-V3.1.apk
           retention-days: 30
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: latest-build
-          name: "MaazCraft Launcher V3 (Latest Release)"
-          body: "Official build of MaazCraft Launcher V3 for Android (Universal APK - Signed & Aligned). Download and install directly."
-          files: release_apks/MaazCraft-Launcher-V3.apk
+          tag_name: v3.1.0-fixed
+          name: "MaazCraft Launcher V3.1 (Fixed & MobileGlues Optimized)"
+          body: |
+            ### 🎮 MaazCraft Launcher V3.1 (Latest Release)
+            
+            **What's New in this Fix:**
+            - 🛠️ **Fixed Package Invalid Error**: Resolved Android package installer error with standard targetSdk 34 + proper v2/v3 APK signing & alignment.
+            - ⚡ **MobileGlues & Mesa Turnip Vulkan Engine**: Real OpenGL 4.6 translation on mobile GPUs for desktop Minecraft Java.
+            - 🔍 **Auto Hardware Profiling**: Analyzes RAM, CPU cores, and GPU to inject optimal `options.txt` and `-Xmx` RAM flags.
+            - ☕ **Multi-Java Support**: Auto-configured OpenJDK 8, 17, and 21 ARM64.
+            
+            **Download the APK file attached below:**
+          files: |
+            release_apks/MaazCraft-Launcher-V3.1.apk
+            release_apks/MaazCraft-Launcher-Latest.apk
           draft: false
           prerelease: false
         env:
