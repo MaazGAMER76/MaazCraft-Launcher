@@ -4,7 +4,6 @@ package com.example.ui.wizard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +56,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -66,6 +64,7 @@ import com.example.core.ControlProfileManager
 import com.example.core.DeviceProfileDetector
 import com.example.core.DriverInstaller
 import com.example.core.JavaManager
+import com.example.core.OptionsManager
 import com.example.core.PreferenceManager
 import com.example.model.DeviceProfile
 import com.example.model.OptimizationStep
@@ -95,20 +94,21 @@ fun OptimizationWizardDialog(
     val javaManager = remember { JavaManager(context) }
     val driverInstaller = remember { DriverInstaller(context) }
     val controlManager = remember { ControlProfileManager(context) }
+    val optionsManager = remember { OptionsManager(context) }
 
     var currentStepIndex by remember { mutableIntStateOf(0) }
     var overallProgress by remember { mutableFloatStateOf(0f) }
-    var statusText by remember { mutableStateOf("Initializing hardware analyzer...") }
+    var statusText by remember { mutableStateOf("Analyzing mobile hardware & GPU...") }
     var isDone by remember { mutableStateOf(false) }
     var detectedProfile by remember { mutableStateOf<DeviceProfile?>(null) }
 
     val steps = remember {
         mutableStateListOf(
-            OptimizationStep(0, "1. Detect Device Hardware", "Scanning CPU, GPU, RAM and thermal profile...", isRunning = true),
-            OptimizationStep(1, "2. Setup Java Runtimes", "Configuring Java 8, 17, 21 ARM64 for all MC versions...", isDone = false),
-            OptimizationStep(2, "3. Install Graphics Driver", "Selecting Mesa Turnip + Zink for Adreno 610 GPU...", isDone = false),
-            OptimizationStep(3, "4. Configure Render Settings", "Applying 2GB RAM, 8 chunk render distance & Fast graphics...", isDone = false),
-            OptimizationStep(4, "5. Mobile Touch Controls", "Setting large touch buttons & medium sensitivity...", isDone = false)
+            OptimizationStep(0, "1. Detect Mobile Hardware", "Scanning CPU architecture, GPU, and RAM capacity...", isRunning = true),
+            OptimizationStep(1, "2. Setup Java Runtimes", "Configuring Java 8, 17, 21 ARM64 for target MC versions...", isDone = false),
+            OptimizationStep(2, "3. MobileGlues / Vulkan Driver", "Selecting optimal GPU render pipeline for device...", isDone = false),
+            OptimizationStep(3, "4. Best Render & Performance Settings", "Injecting optimal chunk distance, FPS limit & options.txt...", isDone = false),
+            OptimizationStep(4, "5. Mobile Touch Controls", "Setting ergonomic on-screen buttons & vibration feedback...", isDone = false)
         )
     }
 
@@ -117,8 +117,8 @@ fun OptimizationWizardDialog(
             // STEP 1: Detect Device
             currentStepIndex = 0
             steps[0] = steps[0].copy(isRunning = true, progress = 0.3f)
-            statusText = "Analyzing CPU architecture and system memory..."
-            delay(400)
+            statusText = "Analyzing CPU architecture, RAM, and GPU vendor..."
+            delay(350)
 
             val profile = DeviceProfileDetector.detect(context)
             detectedProfile = profile
@@ -129,7 +129,7 @@ fun OptimizationWizardDialog(
                 detail = "Detected: ${profile.socName} • ${profile.totalRamMb} MB RAM • ${profile.gpuRenderer}"
             )
             overallProgress = 0.2f
-            delay(300)
+            delay(250)
 
             // STEP 2: Setup Java Runtimes
             currentStepIndex = 1
@@ -137,26 +137,26 @@ fun OptimizationWizardDialog(
             statusText = "Staging Java 8, 17, and 21 ARM64 JDKs..."
             val runtimes = javaManager.getInstalledRuntimes()
             for (r in runtimes) {
-                javaManager.installRuntime(r) { p, msg ->
+                javaManager.installRuntime(r) { _, msg ->
                     statusText = msg
                 }
-                delay(150)
+                delay(100)
             }
             steps[1] = steps[1].copy(
                 isDone = true,
                 isRunning = false,
                 progress = 1f,
-                detail = "Java 8, 17, 21 ARM64 ready in /maazcraft/java/"
+                detail = "Java 8, 17, 21 ARM64 configured in /maazcraft/java/"
             )
             overallProgress = 0.45f
-            delay(300)
+            delay(250)
 
-            // STEP 3: Install Graphics Driver
+            // STEP 3: Install Graphics Driver (MobileGlues / Turnip / ANGLE)
             currentStepIndex = 2
             steps[2] = steps[2].copy(isRunning = true)
-            statusText = "Reading DriverDB.json and installing Turnip Zink..."
-            val bestDriver = driverInstaller.getDriverForId("turnip-zink-adreno-610")
-            driverInstaller.installDriver(bestDriver) { p, msg ->
+            statusText = "Configuring ${profile.recommendedDriver} render pipeline..."
+            val bestDriver = driverInstaller.getDriverForId(profile.recommendedDriver)
+            driverInstaller.installDriver(bestDriver) { _, msg ->
                 statusText = msg
             }
             prefs.selectedDriverId = bestDriver.id
@@ -164,52 +164,56 @@ fun OptimizationWizardDialog(
                 isDone = true,
                 isRunning = false,
                 progress = 1f,
-                detail = "Installed: ${bestDriver.name} (Vulkan 1.3 + Zink OpenGL 4.6)"
+                detail = "Active: ${bestDriver.name} (${bestDriver.driverType})"
             )
             overallProgress = 0.7f
-            delay(300)
+            delay(250)
 
-            // STEP 4: Configure Render Settings
+            // STEP 4: Configure Render Settings & inject options.txt
             currentStepIndex = 3
             steps[3] = steps[3].copy(isRunning = true)
-            statusText = "Optimizing for Snapdragon 680 (RAM=2GB, Chunks=8, Fast Graphics)..."
+            statusText = "Applying RAM=${profile.recommendedRamMb}MB, Chunks=${profile.recommendedRenderDistance}, Graphics=${profile.recommendedGraphics}..."
             prefs.allocatedRamMb = profile.recommendedRamMb
             prefs.renderDistance = profile.recommendedRenderDistance
             prefs.graphicsMode = profile.recommendedGraphics
             prefs.resolutionScale = 100
-            delay(400)
+
+            // Apply directly into game config files
+            optionsManager.applyOptimizedSettings(profile, prefs)
+
+            delay(300)
             steps[3] = steps[3].copy(
                 isDone = true,
                 isRunning = false,
                 progress = 1f,
-                detail = "Applied RAM: ${profile.recommendedRamMb} MB • Render: ${profile.recommendedRenderDistance} chunks • Graphics: ${profile.recommendedGraphics}"
+                detail = "Applied RAM: ${profile.recommendedRamMb} MB • Render: ${profile.recommendedRenderDistance} chunks • Graphics: ${profile.recommendedGraphics} • options.txt injected"
             )
             overallProgress = 0.88f
-            delay(300)
+            delay(250)
 
             // STEP 5: Set Mobile Touch Controls
             currentStepIndex = 4
             steps[4] = steps[4].copy(isRunning = true)
-            statusText = "Loading mobile_controls.json with large touch layout..."
+            statusText = "Loading mobile touch controls layout..."
             val defaultControls = controlManager.loadDefaultProfile()
             prefs.controlScale = defaultControls.buttonScale
             prefs.controlOpacity = defaultControls.buttonOpacity
             prefs.touchSensitivity = defaultControls.touchSensitivity
             prefs.hapticFeedback = defaultControls.vibrationFeedback
-            delay(400)
+            delay(300)
             steps[4] = steps[4].copy(
                 isDone = true,
                 isRunning = false,
                 progress = 1f,
-                detail = "Touch Controls: Scale ${defaultControls.buttonScale}x • Opacity ${(defaultControls.buttonOpacity * 100).toInt()}% • Vibration ON"
+                detail = "Controls: Scale ${defaultControls.buttonScale}x • Opacity ${(defaultControls.buttonOpacity * 100).toInt()}% • Haptics ON"
             )
             overallProgress = 1.0f
 
             // Mark completed in preferences
             prefs.isFirstLaunchDone = true
-            statusText = "Optimization complete! Snapdragon 680 preset configured."
+            statusText = "Optimization complete! Best settings customized for ${profile.socName}."
             isDone = true
-            delay(200)
+            delay(150)
         }
     }
 
@@ -256,14 +260,14 @@ fun OptimizationWizardDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "MaazCraft Auto-Optimizer",
+                        text = "MaazCraft Mobile Optimizer",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
 
                     Text(
-                        text = "Optimizing for Snapdragon 680 + 8GB RAM",
+                        text = detectedProfile?.let { "Auto-Optimizing for ${it.socName}" } ?: "Analyzing device hardware...",
                         fontSize = 14.sp,
                         color = PurpleAccent,
                         fontWeight = FontWeight.Medium,
@@ -287,7 +291,7 @@ fun OptimizationWizardDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Optimization Status",
+                                text = "Analysis & Staging Status",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextSecondary
@@ -380,7 +384,7 @@ fun OptimizationWizardDialog(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Applying hardware tweaks...",
+                            text = "Applying hardware optimizations...",
                             fontSize = 13.sp,
                             color = TextMuted
                         )

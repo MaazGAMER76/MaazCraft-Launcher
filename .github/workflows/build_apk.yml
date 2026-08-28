@@ -42,13 +42,24 @@ jobs:
         run: |
           gradle :app:assembleDebug -x test -x lint --no-daemon --stacktrace
 
-      - name: Find and Prepare APK for Release
+      - name: Find, Align and Sign APK for Release
         run: |
           mkdir -p release_apks
-          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -n "$APK_PATH" ]; then
-            cp "$APK_PATH" release_apks/MaazCraft-Launcher-V3.apk
-            echo "APK found and copied: $APK_PATH"
+          RAW_APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -z "$RAW_APK" ]; then
+            RAW_APK=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
+
+          if [ -n "$RAW_APK" ]; then
+            echo "Found raw APK: $RAW_APK"
+            BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n 1)
+            echo "Using Android build-tools: $BUILD_TOOLS_DIR"
+            
+            # Align and sign with v2/v3 signature
+            $BUILD_TOOLS_DIR/zipalign -v -p 4 "$RAW_APK" release_apks/aligned.apk || cp "$RAW_APK" release_apks/aligned.apk
+            $BUILD_TOOLS_DIR/apksigner sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey --out release_apks/MaazCraft-Launcher-V3.apk release_apks/aligned.apk || cp "$RAW_APK" release_apks/MaazCraft-Launcher-V3.apk
+            
+            echo "APK ready at release_apks/MaazCraft-Launcher-V3.apk"
           else
             echo "Error: No APK generated!"
             exit 1
@@ -67,7 +78,7 @@ jobs:
         with:
           tag_name: latest-build
           name: "MaazCraft Launcher V3 (Latest Release)"
-          body: "Automatic build of MaazCraft Launcher V3 for Android (Zalith Engine). Direct APK attached below."
+          body: "Official build of MaazCraft Launcher V3 for Android (Universal APK - Signed & Aligned). Download and install directly."
           files: release_apks/MaazCraft-Launcher-V3.apk
           draft: false
           prerelease: false

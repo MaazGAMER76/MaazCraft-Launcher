@@ -11,9 +11,10 @@ import java.io.RandomAccessFile
 
 /**
  * Hardware and environment detection engine for MaazCraft Launcher.
- * Auto-detects CPU, GPU, RAM, sets -Xmx to 25% of RAM,
- * provides dedicated profiles for Redmi Note 11 (Snapdragon 680 + Adreno 610)
- * and itel S26 (Unisoc T606 / Mali-G57 6+6GB RAM), and saves to profile.json.
+ * Auto-detects CPU, GPU, RAM, thermal profile, and selects the ideal render pipeline:
+ * - MobileGlues Turnip + Zink Vulkan for Qualcomm Snapdragon / Adreno GPUs
+ * - ANGLE OpenGLES 3.2 on Vulkan for ARM Mali GPUs (MediaTek Dimensity / Unisoc T606 / Exynos)
+ * - Optimized options.txt settings injection before game launch
  */
 class DeviceProfileManager(private val context: Context) {
 
@@ -34,6 +35,17 @@ class DeviceProfileManager(private val context: Context) {
      */
     fun getOrDetect(): DeviceProfile {
         return loadProfile() ?: detectAndSave()
+    }
+
+    /**
+     * Dynamically optimize and sync preferences based on current device analysis
+     */
+    fun applyProfileToPreferences(profile: DeviceProfile, prefs: PreferenceManager) {
+        prefs.allocatedRamMb = profile.recommendedRamMb
+        prefs.renderDistance = profile.recommendedRenderDistance
+        prefs.graphicsMode = profile.recommendedGraphics
+        prefs.selectedDriverId = profile.recommendedDriver
+        prefs.selectedJavaVersion = profile.recommendedJava
     }
 
     fun saveProfile(profile: DeviceProfile) {
@@ -77,12 +89,12 @@ class DeviceProfileManager(private val context: Context) {
                 totalRamMb = obj.optLong("totalRamMb", 4096),
                 availableRamMb = obj.optLong("availableRamMb", 2048),
                 gpuVendor = obj.optString("gpuVendor", "Qualcomm"),
-                gpuRenderer = obj.optString("gpuRenderer", "Adreno (TM) 610"),
+                gpuRenderer = obj.optString("gpuRenderer", "Adreno (TM) 610 (MobileGlues Vulkan)"),
                 isSnapdragon680 = obj.optBoolean("isSnapdragon680", true),
-                recommendedRamMb = obj.optInt("recommendedRamMb", 1024),
+                recommendedRamMb = obj.optInt("recommendedRamMb", 2048),
                 recommendedRenderDistance = obj.optInt("recommendedRenderDistance", 8),
                 recommendedGraphics = obj.optString("recommendedGraphics", "Fast"),
-                recommendedDriver = obj.optString("recommendedDriver", "turnip-zink-adreno"),
+                recommendedDriver = obj.optString("recommendedDriver", "mobileglues-turnip-zink"),
                 recommendedJava = obj.optString("recommendedJava", "Java 21 ARM64")
             )
         } catch (e: Exception) {
@@ -122,13 +134,13 @@ class DeviceProfileManager(private val context: Context) {
             val manufacturer = Build.MANUFACTURER.lowercase()
             val model = Build.MODEL.lowercase()
 
-            // 1. Check for Redmi Note 11 (Snapdragon 680 / SM6225 / Adreno 610)
+            // 1. Check for Qualcomm Snapdragon / Adreno
             val isRedmiNote11 = (manufacturer.contains("xiaomi") || manufacturer.contains("redmi")) &&
                     (model.contains("note 11") || model.contains("2201117") || model.contains("spes")) ||
                     socModel.contains("SM6225", ignoreCase = true) ||
                     socModel.contains("680", ignoreCase = true)
 
-            // 2. Check for itel S26 / itel series (Unisoc T606 / Mali-G57, 6+6GB RAM)
+            // 2. Check for Unisoc / MediaTek / Mali devices (e.g. itel S26, Helio, Dimensity)
             val isItelDevice = manufacturer.contains("itel") ||
                     model.contains("s26") || model.contains("s66") || model.contains("p55") ||
                     socModel.contains("ums9230", ignoreCase = true) ||
@@ -137,7 +149,6 @@ class DeviceProfileManager(private val context: Context) {
                     socModel.contains("unisoc", ignoreCase = true) ||
                     socModel.contains("sprd", ignoreCase = true)
 
-            // GPU & SoC detection
             val isAdreno = isRedmiNote11 ||
                     socModel.contains("SM6225", ignoreCase = true) ||
                     socModel.contains("qcom", ignoreCase = true) ||
@@ -158,49 +169,52 @@ class DeviceProfileManager(private val context: Context) {
 
             val gpuVendor = when {
                 isAdreno -> "Qualcomm"
-                isMali -> "ARM"
+                isMali -> "ARM / Mali"
                 else -> "Universal"
             }
 
             val gpuRenderer = when {
-                isRedmiNote11 -> "Adreno (TM) 610 (Turnip Vulkan)"
-                isItelDevice -> "ARM Mali-G57 MP1 (ANGLE / Vulkan)"
-                isAdreno -> "Adreno 6xx Vulkan (Zink)"
-                isMali -> "ARM Mali Valhall/Bifrost"
-                else -> "Standard OpenGLES"
+                isRedmiNote11 -> "Adreno (TM) 610 (MobileGlues Turnip Vulkan)"
+                isAdreno -> "Qualcomm Adreno (MobileGlues Turnip Vulkan)"
+                isItelDevice -> "ARM Mali-G57 MP1 (ANGLE Vulkan)"
+                isMali -> "ARM Mali Valhall/Bifrost (ANGLE Vulkan)"
+                else -> "MobileGlues GL4ES Compatibility Wrapper"
             }
 
-            // Calculation of RAM allocation
+            // Calculation of RAM allocation based on real physical memory
             val calculatedXmx = when {
-                isRedmiNote11 -> 1536 // 1.5 GB optimal for Redmi Note 11 (4GB total)
-                isItelDevice -> 3072 // 3 GB optimal for itel S26 (6GB+6GB dynamic)
-                else -> (totalRamMb * 0.25).toInt().coerceIn(1024, 4096)
+                totalRamMb >= 8000 -> 2560 // 2.5 GB for 8GB+ phones
+                totalRamMb >= 6000 -> 2048 // 2.0 GB for 6GB phones
+                totalRamMb >= 4000 -> 1536 // 1.5 GB for 4GB phones
+                else -> 1024 // 1.0 GB for low memory devices
             }
 
+            // MobileGlues Turnip renderer is the highest-performing driver for Adreno
             val recommendedDriver = when {
-                isRedmiNote11 || isAdreno -> "turnip-zink-adreno"
-                isItelDevice || isMali -> "angle-mali"
-                else -> "gl4es-universal"
+                isAdreno -> "mobileglues-turnip-zink"
+                isMali -> "angle-mali"
+                else -> "gl4es-adreno-generic"
             }
 
             val recommendedRenderDist = when {
-                isRedmiNote11 -> 6
-                isItelDevice -> 8
+                totalRamMb >= 8000 -> 8
                 totalRamMb >= 6000 -> 8
                 totalRamMb >= 4000 -> 6
                 else -> 4
             }
 
             val socNameFinal = when {
-                isRedmiNote11 -> "Qualcomm Snapdragon 680 (SM6225 6nm)"
-                isItelDevice -> "Unisoc T606 Octa-Core (6+6GB Dynamic RAM)"
-                else -> socModel
+                isRedmiNote11 -> "Qualcomm Snapdragon 680 (SM6225)"
+                isAdreno -> "Qualcomm Snapdragon Octa-Core"
+                isItelDevice -> "Unisoc T606 (Dynamic RAM)"
+                isMali -> "ARM Mali Octa-Core"
+                else -> if (socModel.isNotBlank() && socModel != "unknown") socModel else "${Build.MANUFACTURER} ${Build.MODEL}"
             }
 
             val cpuModelFinal = when {
-                isRedmiNote11 -> "Redmi Note 11 Kryo 265 (4x 2.4GHz + 4x 1.9GHz)"
-                isItelDevice -> "itel S26 Cortex-A75/A55 Octa-Core"
-                else -> "${Build.MANUFACTURER} ${Build.MODEL} Octa-Core"
+                isRedmiNote11 -> "Redmi Note 11 Kryo 265"
+                isItelDevice -> "itel S26 Cortex-A75/A55"
+                else -> "${Build.MANUFACTURER} ${Build.MODEL}"
             }
 
             return DeviceProfile(
@@ -212,12 +226,12 @@ class DeviceProfileManager(private val context: Context) {
                 availableRamMb = availableRamMb,
                 gpuVendor = gpuVendor,
                 gpuRenderer = gpuRenderer,
-                isSnapdragon680 = isRedmiNote11 || isAdreno,
+                isSnapdragon680 = isAdreno,
                 recommendedRamMb = calculatedXmx,
                 recommendedRenderDistance = recommendedRenderDist,
                 recommendedGraphics = "Fast",
                 recommendedDriver = recommendedDriver,
-                recommendedJava = if (isArm64) "Java 21 ARM64" else "Java 8 ARM32"
+                recommendedJava = if (isArm64) "Java 21 ARM64 (MC 1.21+)" else "Java 8 ARM32"
             )
         }
 
@@ -260,7 +274,7 @@ class DeviceProfileManager(private val context: Context) {
                 val file = File("/proc/cpuinfo")
                 if (file.exists()) file.readText() else "Qualcomm Snapdragon Kryo"
             } catch (e: Exception) {
-                "Qualcomm Snapdragon 680"
+                "Qualcomm Snapdragon"
             }
         }
     }

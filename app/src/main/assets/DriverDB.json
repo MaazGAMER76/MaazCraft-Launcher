@@ -1,48 +1,48 @@
 {
   "drivers": [
     {
+      "id": "mobileglues-turnip-zink",
+      "name": "MobileGlues Turnip + Zink (Vulkan 1.3)",
+      "targetGpu": "Adreno 610 / 6xx / 7xx",
+      "targetSoC": "Qualcomm Snapdragon 680/778G/870/8Gen1+",
+      "driverType": "MOBILEGLUES_VULKAN",
+      "version": "24.2.0-mobileglues",
+      "recommended": true,
+      "features": ["MobileGlues Fast-GL Pipeline", "Turnip Adreno Vulkan 1.3", "Zink OpenGL 4.6 Translation", "Zero-Copy Surface Buffer", "Shader Pre-Compilation"],
+      "recommendedFlags": "-Dorg.lwjgl.opengl.libname=libGL.so -Dzink.disable_linear=true -Dturnip.speed=1 -Dmobileglues.fast=1 -Dmobileglues.render=vulkan"
+    },
+    {
       "id": "turnip-zink-adreno-610",
       "name": "Mesa Turnip + Zink Driver (Adreno 610 / SD680)",
       "targetGpu": "Adreno 610",
       "targetSoC": "Snapdragon 680",
       "driverType": "VULKAN_ZINK",
       "version": "24.1.0-devel",
-      "recommended": true,
+      "recommended": false,
       "features": ["OpenGL 4.6 on Vulkan", "Shader Pre-caching", "Low Power Profile", "Async Pipeline"],
       "recommendedFlags": "-Dorg.lwjgl.opengl.libname=libGL.so -Dzink.disable_linear=true -Dturnip.speed=1"
     },
     {
-      "id": "turnip-adreno-6xx",
-      "name": "Mesa Turnip Driver (Adreno 6xx series)",
-      "targetGpu": "Adreno 6xx",
-      "targetSoC": "Snapdragon 6xx/7xx/8xx",
-      "driverType": "TURNIP_VULKAN",
-      "version": "23.3.4",
+      "id": "angle-mali",
+      "name": "ANGLE Vulkan / OpenGLES (ARM Mali & Unisoc)",
+      "targetGpu": "Mali-G57 / G52 / G68 / G77 / G78 / Immortalis",
+      "targetSoC": "MediaTek Dimensity / Helio / Unisoc T606 / Exynos",
+      "driverType": "ANGLE_VULKAN",
+      "version": "2.1.21-angle",
       "recommended": false,
-      "features": ["Direct Vulkan 1.3", "Vulkan WSI", "Adreno KGSL backend"],
-      "recommendedFlags": "-Dorg.lwjgl.vulkan.libname=libvulkan.so"
+      "features": ["ANGLE OpenGLES 3.2 on Vulkan", "Mali Threaded Command Buffers", "Dynamic Memory Tuning", "High FPS Shader Cache"],
+      "recommendedFlags": "-Dorg.lwjgl.opengl.libname=libGLESv2.so -Dangle.fast=1 -Dangle.mali_threaded=1"
     },
     {
       "id": "gl4es-adreno-generic",
-      "name": "GL4ES 1.1.4 Optimized OpenGL wrapper",
+      "name": "GL4ES 1.1.4 Optimized Wrapper (Universal)",
       "targetGpu": "Adreno / Generic GLES",
-      "targetSoC": "All ARM64 SoCs",
+      "targetSoC": "All ARM64 / ARM32 SoCs",
       "driverType": "GL4ES",
       "version": "1.1.4-mc",
       "recommended": false,
       "features": ["OpenGLES 2.0/3.0 to OpenGL 2.1 wrapper", "High Compatibility", "Safe Fallback"],
       "recommendedFlags": "-Dgl4es.notexrect=1 -Dgl4es.fbo=1"
-    },
-    {
-      "id": "panfrost-mali",
-      "name": "Panfrost / Mali OpenGLES Driver",
-      "targetGpu": "Mali-G52 / G57 / G68 / G77",
-      "targetSoC": "MediaTek Dimensity / Helio / Exynos",
-      "driverType": "MALI_GLES",
-      "version": "23.2.0",
-      "recommended": false,
-      "features": ["Midgard/Bifrost/Valhall OpenGLES", "Mali Threaded Renderer"],
-      "recommendedFlags": "-Dgl4es.mali=1"
     },
     {
       "id": "holy-gl-universal",

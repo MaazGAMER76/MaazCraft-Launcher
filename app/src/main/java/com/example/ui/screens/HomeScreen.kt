@@ -130,6 +130,8 @@ fun HomeScreen(
     var accountName by remember { mutableStateOf(prefs.accountUsername) }
     var isMicrosoftAccount by remember { mutableStateOf(prefs.accountType == "Microsoft") }
 
+    val detectedProfile = remember { DeviceProfileDetector.detect(context) }
+
     val activeVersion = remember(prefs.selectedVersionId, prefs.selectedModLoader) {
         MinecraftVersion(
             id = prefs.selectedVersionId,
@@ -328,7 +330,7 @@ fun HomeScreen(
                     )
 
                     Text(
-                        text = "${activeVersion.modLoader} Loader • Snapdragon 680 Optimized",
+                        text = "${activeVersion.modLoader} Loader • ${detectedProfile.socName} Optimized",
                         fontSize = 13.sp,
                         color = PurpleLight,
                         fontWeight = FontWeight.Medium
@@ -506,7 +508,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Snapdragon 680 Preset Active",
+                            text = "${detectedProfile.socName.take(24)} Preset Active",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -527,7 +529,7 @@ fun HomeScreen(
                     PresetBadge(label = "RAM", value = "${prefs.allocatedRamMb} MB", icon = Icons.Default.Memory)
                     PresetBadge(label = "Java", value = prefs.selectedJavaVersion.take(7), icon = Icons.Default.Code)
                     PresetBadge(label = "Chunks", value = "${prefs.renderDistance}", icon = Icons.Default.Speed)
-                    PresetBadge(label = "Driver", value = "Turnip", icon = Icons.Default.VideogameAsset)
+                    PresetBadge(label = "Driver", value = if (prefs.selectedDriverId.contains("mobileglues")) "MobileGlues" else "Turnip", icon = Icons.Default.VideogameAsset)
                 }
             }
         }
@@ -898,7 +900,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Minecraft ${activeVersion.id} • Adreno 610 Turnip Zink 60 FPS",
+                            text = "Minecraft ${activeVersion.id} • ${detectedProfile.gpuRenderer.take(30)} • ${fps} FPS",
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 13.sp,
                             fontFamily = FontFamily.Monospace

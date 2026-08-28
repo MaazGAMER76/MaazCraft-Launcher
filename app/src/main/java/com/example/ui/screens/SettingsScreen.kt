@@ -90,6 +90,7 @@ fun SettingsScreen(
     val prefs = remember { PreferenceManager(context) }
     val javaManager = remember { JavaManager(context) }
     val driverInstaller = remember { DriverInstaller(context) }
+    val detectedProfile = remember { com.example.core.DeviceProfileDetector.detect(context) }
 
     var ramMb by remember { mutableIntStateOf(prefs.allocatedRamMb) }
     var selectedJava by remember { mutableStateOf(prefs.selectedJavaVersion) }
@@ -188,7 +189,7 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Snapdragon 680 with 8GB RAM recommended: 2048 MB (2 GB)",
+                    text = "${detectedProfile.socName} (${detectedProfile.totalRamMb} MB RAM) recommended: ${detectedProfile.recommendedRamMb} MB (${String.format("%.1f", detectedProfile.recommendedRamMb / 1024f)} GB)",
                     fontSize = 11.sp,
                     color = TextSecondary
                 )
