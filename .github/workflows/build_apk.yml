@@ -3,8 +3,6 @@ name: Build and Release MaazCraft APK
 on:
   push:
     branches: [ "**" ]
-    tags:
-      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -23,27 +21,29 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Make gradlew executable (if present)
-        run: |
-          if [ -f gradlew ]; then chmod +x gradlew; fi
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build Android APK
         run: |
-          if [ -f gradlew ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug --no-daemon --stacktrace || gradle assembleDebug --no-daemon --stacktrace
-          else
-            gradle assembleDebug --no-daemon --stacktrace
-          fi
+          gradle :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Rename APK for Release
+      - name: Find and Prepare APK for Release
         run: |
           mkdir -p release_apks
-          cp app/build/outputs/apk/debug/*.apk release_apks/MaazCraft-Launcher-V3.apk
+          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -n "$APK_PATH" ]; then
+            cp "$APK_PATH" release_apks/MaazCraft-Launcher-V3.apk
+            echo "APK found and copied: $APK_PATH"
+          else
+            echo "Error: No APK generated!"
+            exit 1
+          fi
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
